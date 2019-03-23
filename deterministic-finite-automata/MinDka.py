@@ -38,12 +38,8 @@ def getTransitions(state, symbol):
     :param symbol: alphabet symbol
     :return: set of states
     """
-    states = set()
     if TRANSITIONS.get((state, symbol)) != None:
-        states.update(TRANSITIONS.get((state, symbol)))
-    else:
-        states.add("#")
-    return states
+        return sorted(set(TRANSITIONS.get((state, symbol))))
 
 
 def getReachableStates():
