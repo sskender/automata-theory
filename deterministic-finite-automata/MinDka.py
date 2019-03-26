@@ -23,11 +23,7 @@ def getNotAcceptableStates():
     Get all not acceptable states
     :return: set of not acceptable states
     """
-    not_acceptable_states = set()
-    for state in ALL_STATES:
-        if state not in ACCEPTABLE_STATES:
-            not_acceptable_states.add(state)
-    return sorted(not_acceptable_states)
+    return set(ALL_STATES.difference(ACCEPTABLE_STATES))
 
 
 def getTransitions(state, symbol):
@@ -39,7 +35,7 @@ def getTransitions(state, symbol):
     :return: set of states
     """
     if TRANSITIONS.get((state, symbol)) != None:
-        return sorted(set(TRANSITIONS.get((state, symbol))))
+        return set(TRANSITIONS.get((state, symbol)))
 
 
 def getReachableStates():
@@ -61,16 +57,37 @@ def getReachableStates():
                 new_states.update(getTransitions(state, symbol))
         reachable_states.update(new_states)
 
-    return sorted(reachable_states)
+    return reachable_states
+
+
+def printDFA():
+    """
+    Print minimized DFA
+    """
+    print(",".join(sorted(ALL_STATES)))
+    print(",".join(sorted(SYMBOLS)))
+    print(",".join(sorted(ACCEPTABLE_STATES)))
+    print(STARTING_STATE)
+    for state in sorted(ALL_STATES):
+        for symbol in sorted(SYMBOLS):
+            print("{},{}->{}".format(state, symbol, list(getTransitions(state, symbol))[0]))
 
 
 # Definition
 # Input format
-ALL_STATES = sorted(set(input().split(",")))                # Q
-SYMBOLS = sorted(set(input().split(",")))                   # Alphabet symbols (sigma)
-ACCEPTABLE_STATES = sorted(set(input().split(",")))         # F is a subset of Q
+ALL_STATES = set(input().split(","))                        # Q
+SYMBOLS = set(input().split(","))                           # Alphabet symbols (sigma)
+ACCEPTABLE_STATES = set(input().split(","))                 # F is a subset of Q
 STARTING_STATE = input()                                    # Q0
 TRANSITIONS = getInputTransitions()                         # Transition functions (delta)
 NOT_ACCEPTABLE_STATES = getNotAcceptableStates()
 REACHABLE_STATES = getReachableStates()
+
+
+def main():
+    printDFA()
+
+
+if __name__ == "__main__":
+    main()
 
