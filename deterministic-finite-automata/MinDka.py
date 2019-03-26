@@ -75,13 +75,21 @@ REACHABLE_STATES = getReachableStates()
 
 
 def removeUnreachableStates():
-    global ALL_STATES
-    global TRANSITIONS
     """
     Removes unreachable states and all links to them in transitions table
     """
+    global ALL_STATES
+    global TRANSITIONS
     ALL_STATES = set(state for state in ALL_STATES if state in REACHABLE_STATES)
     TRANSITIONS = {k:v for k, v in TRANSITIONS.items() if k[0] in REACHABLE_STATES}
+
+
+def minimize():
+    """
+    Perform minimization
+    """
+    global ALL_STATES
+    global TRANSITIONS
 
 
 def printDFA():
