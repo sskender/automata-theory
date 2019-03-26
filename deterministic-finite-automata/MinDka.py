@@ -1,4 +1,4 @@
-global ALL_STATES, SYMBOLS, ACCEPTABLE_STATES, NOT_ACCEPTABLE_STATES, STARTING_STATE, TRANSITIONS
+global ALL_STATES, SYMBOLS, ACCEPTABLE_STATES, NOT_ACCEPTABLE_STATES, STARTING_STATE, TRANSITIONS, REACHABLE_STATES
 
 
 def getInputTransitions():
@@ -12,7 +12,7 @@ def getInputTransitions():
             function = input()
             if function == "\n" or function == "": break
             function = function.split("->")
-            transitions[tuple(function[0].split(","))] = set(function[1].split(","))
+            transitions[tuple(function[0].split(","))] = function[1]
         except:
             break
     return transitions
@@ -28,14 +28,13 @@ def getNotAcceptableStates():
 
 def getTransitions(state, symbol):
     """
-    Get set of next states from transitions table
-    If state does not exist in transitions table, empty set is returned
+    Get next state from transitions table
+    If state does not exist in transitions table, None is returned
     :param state: automata state
     :param symbol: alphabet symbol
-    :return: set of states
+    :return: state or None
     """
-    if TRANSITIONS.get((state, symbol)) != None:
-        return set(TRANSITIONS.get((state, symbol)))
+    return TRANSITIONS.get((state, symbol))
 
 
 def getReachableStates():
@@ -46,7 +45,9 @@ def getReachableStates():
     reachable_states = set([STARTING_STATE])
 
     for symbol in SYMBOLS:
-        reachable_states.update(getTransitions(STARTING_STATE, symbol))
+        possible_state = getTransitions(STARTING_STATE, symbol)
+        if possible_state != None:
+            reachable_states.add(possible_state)
 
     size = 0
     while len(reachable_states) > size:
@@ -54,23 +55,12 @@ def getReachableStates():
         new_states = set()
         for state in reachable_states:
             for symbol in SYMBOLS:
-                new_states.update(getTransitions(state, symbol))
+                possible_state = getTransitions(state, symbol)
+                if possible_state != None:
+                    new_states.add(possible_state)
         reachable_states.update(new_states)
 
     return reachable_states
-
-
-def printDFA():
-    """
-    Print minimized DFA
-    """
-    print(",".join(sorted(ALL_STATES)))
-    print(",".join(sorted(SYMBOLS)))
-    print(",".join(sorted(ACCEPTABLE_STATES)))
-    print(STARTING_STATE)
-    for state in sorted(ALL_STATES):
-        for symbol in sorted(SYMBOLS):
-            print("{},{}->{}".format(state, symbol, list(getTransitions(state, symbol))[0]))
 
 
 # Definition
@@ -84,7 +74,31 @@ NOT_ACCEPTABLE_STATES = getNotAcceptableStates()
 REACHABLE_STATES = getReachableStates()
 
 
+def removeUnreachableStates():
+    global ALL_STATES
+    global TRANSITIONS
+    """
+    Removes unreachable states and all links to them in transitions table
+    """
+    ALL_STATES = set(state for state in ALL_STATES if state in REACHABLE_STATES)
+    TRANSITIONS = {k:v for k, v in TRANSITIONS.items() if k[0] in REACHABLE_STATES}
+
+
+def printDFA():
+    """
+    Print minimized DFA
+    """
+    print(",".join(sorted(ALL_STATES)))
+    print(",".join(sorted(SYMBOLS)))
+    print(",".join(sorted(ACCEPTABLE_STATES)))
+    print(STARTING_STATE)
+    for state in sorted(ALL_STATES):
+        for symbol in sorted(SYMBOLS):
+            print("{},{}->{}".format(state, symbol, getTransitions(state, symbol)))
+
+
 def main():
+    removeUnreachableStates()
     printDFA()
 
 
