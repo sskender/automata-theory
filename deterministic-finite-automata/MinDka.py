@@ -91,6 +91,63 @@ def minimize():
     global ALL_STATES
     global TRANSITIONS
 
+    def sortTuple(a, b):
+        return (a, b) if a < b else (b, a)
+
+    def createMatrix():
+        matrix = dict()
+        sorted_all_states = sorted(ALL_STATES)
+
+        for i, item1 in enumerate(sorted_all_states):
+            for item2 in sorted_all_states[i+1:]:
+                matrix[(item1, item2)] = (item1 in ACCEPTABLE_STATES) != (item2 in ACCEPTABLE_STATES)
+
+        return matrix
+
+    def getSetOfStatesToBeRemovedBasedOnMatrix(matrix):
+        """
+        :param matrix:
+        """
+        flag = True
+        sorted_all_states = sorted(ALL_STATES)
+        
+        while flag:
+            flag = False
+
+            for i, item1 in enumerate(sorted_all_states):
+                for item2 in sorted_all_states[i+1:]:
+
+                    if matrix[(item1, item2)]: continue
+
+                    # Check distinguishable
+                    for symbol in SYMBOLS:
+                        transition1 = getTransitions(item1, symbol)
+                        transition2 = getTransitions(item2, symbol)
+
+                        if transition1 != None and transition2 != None and transition1 != transition2:
+                            marked = matrix[sortTuple(transition1, transition2)]
+                            flag = flag or marked
+                            matrix[(item1, item2)] = marked
+
+                            if marked:
+                                break
+
+        set_to_remove = set()
+        for k, v in matrix.items():
+            if not v:
+                # Keep the first state in lexicographic order
+                # Discard others, therefore add those to set to be removed
+                set_to_remove.add(k[1])
+
+        return set_to_remove
+
+
+    # Function body is here
+    matrix = createMatrix()
+    states_to_remove = getSetOfStatesToBeRemovedBasedOnMatrix(matrix)
+
+    print(states_to_remove)
+
 
 def printDFA():
     """
@@ -107,6 +164,7 @@ def printDFA():
 
 def main():
     removeUnreachableStates()
+    minimize()
     printDFA()
 
 
