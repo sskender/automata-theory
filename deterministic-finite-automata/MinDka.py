@@ -1,34 +1,16 @@
-
-
-def getInputTransitions():
-    """
-    Get all transitions functions from input
-    :return: Dictionary of transitions functions
-    """
-    transitions = dict()
-    while True:
-        try:
-            function = input()
-            if function == "\n" or function == "": break
-            function = function.split("->")
-            transitions[tuple(function[0].split(","))] = function[1]
-        except:
-            break
-    return transitions
-
-
-
-
-
-
-
-
-
+"""Create DFA from standard input and print minimized DFA."""
 class DFA(object):
-
+    """Deterministic final automata."""
 
     def __init__(self, all_states, symbols, acceptable_states, starting_state, transitions):
         """
+        Automata definition.
+
+        :param all_states: set of states (Q)
+        :param symbols: set of alphabet symbols (SIGMA)
+        :param accaptable_states: set of acceptable states (F)
+        :param starting_state: starting state (Q0)
+        :param transitions: transitions table dictionary (DELTA)
         """
         self.ALL_STATES = all_states
         self.SYMBOLS = symbols
@@ -36,10 +18,8 @@ class DFA(object):
         self.STARTING_STATE = starting_state
         self.TRANSITIONS = transitions
 
-        self.REACHABLE_STATES = self.getReachableStates()
 
-
-    def getTransitions(self, state, symbol):
+    def getTransition(self, state, symbol):
         """
         Get next state from transitions table. If state does not exist in transitions table, None is returned.
 
@@ -54,12 +34,12 @@ class DFA(object):
         """
         Extract only reachable states from set of states.
 
-        :return: set of states
+        :return: set of reachable states
         """
         reachable_states = set([self.STARTING_STATE])
 
         for symbol in self.SYMBOLS:
-            possible_state = self.getTransitions(self.STARTING_STATE, symbol)
+            possible_state = self.getTransition(self.STARTING_STATE, symbol)
             if possible_state != None:
                 reachable_states.add(possible_state)
 
@@ -69,7 +49,7 @@ class DFA(object):
             new_states = set()
             for state in reachable_states:
                 for symbol in self.SYMBOLS:
-                    possible_state = self.getTransitions(state, symbol)
+                    possible_state = self.getTransition(state, symbol)
                     if possible_state != None:
                         new_states.add(possible_state)
             reachable_states.update(new_states)
@@ -78,16 +58,30 @@ class DFA(object):
 
 
     def removeUnreachableStates(self):
+        """Remove unreachable states and all links to them in transitions table."""
+        reachable_states = self.getReachableStates()
+
+        self.ALL_STATES = set(state for state in self.ALL_STATES if state in reachable_states)
+        self.ACCEPTABLE_STATES = set(state for state in self.ACCEPTABLE_STATES if state in reachable_states)
+        self.TRANSITIONS = {k:v for k, v in self.TRANSITIONS.items() if k[0] in reachable_states}
+
+
+    def sortTuple(self, a, b):
         """
-        Removes unreachable states and all links to them in transitions table.
+        Get sorted tuple from two items.
+
+        :param a: first item
+        :param b: second item
+        :return: sorted tuple
         """
-        self.ALL_STATES = set(state for state in self.ALL_STATES if state in self.REACHABLE_STATES)
-        self.ACCEPTABLE_STATES = set(state for state in self.ACCEPTABLE_STATES if state in self.REACHABLE_STATES)
-        self.TRANSITIONS = {k:v for k, v in self.TRANSITIONS.items() if k[0] in self.REACHABLE_STATES}
+        return (a, b) if a < b else (b, a)
 
 
     def createMatrix(self):
         """
+        Create matrix.
+
+        :return: matrix
         """
         matrix = dict()
         all_states = sorted(self.ALL_STATES)
@@ -95,59 +89,24 @@ class DFA(object):
         for i in range(len(all_states) - 1):
             for j in range(i + 1, len(all_states)):
                 # This is already cleaned transitions table
-                matrix[(all_states[i], all_states[j])] = ((all_states[i] in self.ACCEPTABLE_STATES) ^ (all_states[j] in self.ACCEPTABLE_STATES))
+                matrix[self.sortTuple(all_states[i], all_states[j])] = ((all_states[i] in self.ACCEPTABLE_STATES) ^ (all_states[j] in self.ACCEPTABLE_STATES))
 
-        return matrix
-
-
-    def sortTuple(self, a, b):
-        """
-        """
-        return (a, b) if a < b else (b, a)
-
-
-    def getValueFromDict(self, dictionary, key):
-        """
-        Resolve KeyError issue. Returns None if key is not in dict.
-
-        :param dictionary: dictionary
-        :param key: key
-        :return: found value or None
-        """
-        return dictionary.get(key)
-
-
-    def nemamPojmaKajOvoRadi(self, matrix):
-        """
-        jebeno radi
-        """
-        # koji je ovo k
-        list_of_states = dict()
-
-
-        all_states = sorted(self.ALL_STATES)
+        #list_of_states = dict()
 
         for i in range(len(all_states) - 1):
             for j in range(i + 1, len(all_states)):
 
                 for symbol in self.SYMBOLS:
-                    transition1 = self.getTransitions(all_states[i], symbol)
-                    transition2 = self.getTransitions(all_states[j], symbol)
+                    transition1 = self.getTransition(all_states[i], symbol)
+                    transition2 = self.getTransition(all_states[j], symbol)
 
                     if (transition1 != None) and (transition2 != None):
-                        matrixBoolean = matrix.get(self.sortTuple(transition1, transition2))
-
-                        if (matrixBoolean == True):
+                        if matrix.get(self.sortTuple(transition1, transition2)):
                             matrix[self.sortTuple(all_states[i], all_states[j])] = True
-                        else:
-                            list_of_states[self.sortTuple(transition1, transition2)] = self.sortTuple(all_states[i], all_states[j])
+                        #else:
+                        #    list_of_states[self.sortTuple(transition1, transition2)] = self.sortTuple(all_states[i], all_states[j])
 
-
-        return matrix, list_of_states
-
-
-
-    def checkForX(self, matrix, list_of_states):
+        """
         flag = True
         count = 0
 
@@ -156,70 +115,78 @@ class DFA(object):
 
                 if matrix.get(item):
                     matrix[list_of_states.get(item)] = True
+                    print(item)
+                    print("plus ")
                     count += 1
 
             if count > len(list_of_states)*4:
                 flag = False
+        """
 
-        return matrix, list_of_states
-
+        return matrix #, list_of_states
 
 
     def findSameStates(self, matrix):
         """
+        Calculate same states from given matrix.
+
+        :param matrix: matrix dictionary
+        :return: list of tuples representing same states
         """
-        newSetDict = list()
+        same_states = list()
         all_states = sorted(self.ALL_STATES)
 
         for i in range(len(all_states) - 1):
             for j in range(i + 1, len(all_states)):
-                matrixBool = matrix.get(self.sortTuple(all_states[i], all_states[j]))
-                #print(matrixBool)
-                if matrixBool == False:
-                    newSetDict.append(self.sortTuple(all_states[i], all_states[j]))
+                if not matrix.get(self.sortTuple(all_states[i], all_states[j])):
+                    same_states.append(self.sortTuple(all_states[i], all_states[j]))
 
-        return newSetDict
+        return same_states
 
 
-    def doMinimize(self, same_states):
+    def minimize(self):
+        """
+        Minimize DFA.
+
+        :return: new minimized DFA object
+        """
+        minimizedDFA = DFA(self.ALL_STATES, self.SYMBOLS, self.ACCEPTABLE_STATES, self.STARTING_STATE, self.TRANSITIONS)
+
+        minimizedDFA.removeUnreachableStates()
+        matrix = minimizedDFA.createMatrix()
+        same_states = minimizedDFA.findSameStates(matrix)
+
         for state in same_states:
-            for symbol in self.SYMBOLS:
+            for symbol in minimizedDFA.SYMBOLS:
 
                 try:
-                    del self.TRANSITIONS[(state[1], symbol)]
+                    del minimizedDFA.TRANSITIONS[(state[1], symbol)]
                 except:
-                    None
+                    pass
 
                 try:
-                    self.ALL_STATES.remove(state[1])
+                    minimizedDFA.ALL_STATES.remove(state[1])
                 except:
-                    None
+                    pass
 
                 try:
-                    self.ACCEPTABLE_STATES.remove(state[1])
+                    minimizedDFA.ACCEPTABLE_STATES.remove(state[1])
                 except:
-                    None
+                    pass
 
-                if state[1] == self.STARTING_STATE:
-                    self.STARTING_STATE = state[0]
+                if state[1] == minimizedDFA.STARTING_STATE:
+                    minimizedDFA.STARTING_STATE = state[0]
 
-
-        for item in self.TRANSITIONS.keys():
+        for key in minimizedDFA.TRANSITIONS.keys():
             for state in same_states:
+                if minimizedDFA.TRANSITIONS.get(key) == state[1]:
+                    minimizedDFA.TRANSITIONS[key] = state[0]
 
-                if self.TRANSITIONS.get(item) == state[1]:
-                    self.TRANSITIONS[item] = state[0]
-
-        return
-
-
-
+        return minimizedDFA
 
 
     def printDFA(self):
-        """
-        Print minimized DFA
-        """
+        """Print DFA definition."""
         print(",".join(sorted(self.ALL_STATES)))
         print(",".join(sorted(self.SYMBOLS)))
         print(",".join(sorted(self.ACCEPTABLE_STATES)))
@@ -229,139 +196,37 @@ class DFA(object):
 
 
 
+def getInputTransitions():
+    """
+    Get all transitions functions from input.
+
+    :return: Dictionary of transitions functions
+    """
+    transitions = dict()
+    while True:
+        try:
+            function = input()
+            if function == "\n" or function == "": break
+            function = function.split("->")
+            transitions[tuple(function[0].split(","))] = function[1]
+        except:
+            break
+    return transitions
 
 
+def main():
+    """Automata input and definition."""
+    ALL_STATES = set(input().split(","))            # Q
+    SYMBOLS = set(input().split(","))               # Alphabet symbols (sigma)
+    ACCEPTABLE_STATES = set(input().split(","))     # F is a subset of Q
+    STARTING_STATE = input()                        # Q0
+    TRANSITIONS = getInputTransitions()             # Transition functions (delta)
+
+    originalDFA = DFA(ALL_STATES, SYMBOLS, ACCEPTABLE_STATES, STARTING_STATE, TRANSITIONS)
+
+    minimizedDFA = originalDFA.minimize()
+    minimizedDFA.printDFA()
 
 
-
-
-
-    # ovo i gornje se moze spojti s onim while jednim
-    def checkMatrix(self, matrix):
-        """
-        """
-        flag = True
-        sorted_all_states = sorted(self.ALL_STATES)
-        
-        while flag:
-            flag = False
-
-            for i, item1 in enumerate(sorted_all_states):
-                for item2 in sorted_all_states[i+1:]:
-
-                    if matrix[self.sortTuple(item1, item2)]: continue
-
-                    # Check distinguishable
-                    for symbol in self.SYMBOLS:
-                        transition1 = self.getTransitions(item1, symbol)
-                        transition2 = self.getTransitions(item2, symbol)
-
-                        if transition1 != None and transition2 != None: # and transition1 != transition2:
-                            marked = matrix.get(self.sortTuple(transition1, transition2))
-                            flag = flag or marked
-                            matrix[self.sortTuple(item1, item2)] = marked
-
-                            if marked:
-                                break
-
-        set_to_remove = set()
-        for k, v in matrix.items():
-            if not v:
-                # Keep the first state in lexicographic order
-                # Discard others, therefore add those to set to be removed
-                set_to_remove.add(k[1])
-
-        return set_to_remove
-
-
-
-
-
-
-    def minimize(self):
-        """
-        """
-        self.removeUnreachableStates()
-        # bleh
-        # bleh
-        # no print here
-
-        matrix = self.createMatrix()
-
-        """
-        for item in matrix.items():
-            print(item)
-
-        print(len(matrix))
-        print("\n\n")
-        """
-
-
-
-
-
-        new_matrix, some_states = self.nemamPojmaKajOvoRadi(matrix)
-
-        #print(len(matrix))
-        new_matrix, some_states = self.checkForX(matrix, some_states)
-
-        #print(len(matrix))
-
-
-        """
-        for item in new_matrix.items():
-            print(item)
-        print("\n\n")
-
-        for item in some_states.items():
-            print(item)
-        print("\n\n")
-        """
-
-
-
-        same_states = self.findSameStates(new_matrix)
-        #print(same_states)
-
-
-        self.doMinimize(same_states)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Definition
-# Input format
-ALL_STATES = set(input().split(","))                        # Q
-SYMBOLS = set(input().split(","))                           # Alphabet symbols (sigma)
-ACCEPTABLE_STATES = set(input().split(","))                 # F is a subset of Q
-STARTING_STATE = input()                                    # Q0
-TRANSITIONS = getInputTransitions()                         # Transition functions (delta)
-
-
-
-
-
-
-myDFA = DFA(ALL_STATES, SYMBOLS, ACCEPTABLE_STATES, STARTING_STATE, TRANSITIONS)
-
-myDFA.minimize()   
-
-myDFA.printDFA()
-
-"""
-print("lol")
-for item in myDFA.TRANSITIONS.items():
-
-    print(item)
-"""
+if __name__ == "__main__":
+    main()
