@@ -91,8 +91,6 @@ class DFA(object):
                 # This is already cleaned transitions table
                 matrix[self.sortTuple(all_states[i], all_states[j])] = ((all_states[i] in self.ACCEPTABLE_STATES) ^ (all_states[j] in self.ACCEPTABLE_STATES))
 
-        #list_of_states = dict()
-
         for i in range(len(all_states) - 1):
             for j in range(i + 1, len(all_states)):
 
@@ -103,27 +101,8 @@ class DFA(object):
                     if (transition1 != None) and (transition2 != None):
                         if matrix.get(self.sortTuple(transition1, transition2)):
                             matrix[self.sortTuple(all_states[i], all_states[j])] = True
-                        #else:
-                        #    list_of_states[self.sortTuple(transition1, transition2)] = self.sortTuple(all_states[i], all_states[j])
 
-        """
-        flag = True
-        count = 0
-
-        while (flag and count != 0):
-            for item in list_of_states.items():
-
-                if matrix.get(item):
-                    matrix[list_of_states.get(item)] = True
-                    print(item)
-                    print("plus ")
-                    count += 1
-
-            if count > len(list_of_states)*4:
-                flag = False
-        """
-
-        return matrix #, list_of_states
+        return matrix
 
 
     def findSameStates(self, matrix):
