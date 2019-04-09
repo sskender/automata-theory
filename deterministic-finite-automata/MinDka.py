@@ -1,4 +1,6 @@
 """Create DFA from standard input and print minimized DFA."""
+
+
 class DFA(object):
     """Deterministic final automata."""
 
@@ -8,7 +10,7 @@ class DFA(object):
 
         :param all_states: set of states (Q)
         :param symbols: set of alphabet symbols (SIGMA)
-        :param accaptable_states: set of acceptable states (F)
+        :param acceptable_states: set of acceptable states (F)
         :param starting_state: starting state (Q0)
         :param transitions: transitions table dictionary (DELTA)
         """
@@ -36,11 +38,11 @@ class DFA(object):
 
         :return: set of reachable states
         """
-        reachable_states = set([self.STARTING_STATE])
+        reachable_states = {self.STARTING_STATE}
 
         for symbol in self.SYMBOLS:
             possible_state = self.getTransition(self.STARTING_STATE, symbol)
-            if possible_state != None:
+            if possible_state is not None:
                 reachable_states.add(possible_state)
 
         size = 0
@@ -50,7 +52,7 @@ class DFA(object):
             for state in reachable_states:
                 for symbol in self.SYMBOLS:
                     possible_state = self.getTransition(state, symbol)
-                    if possible_state != None:
+                    if possible_state is not None:
                         new_states.add(possible_state)
             reachable_states.update(new_states)
 
@@ -63,7 +65,7 @@ class DFA(object):
 
         self.ALL_STATES = set(state for state in self.ALL_STATES if state in reachable_states)
         self.ACCEPTABLE_STATES = set(state for state in self.ACCEPTABLE_STATES if state in reachable_states)
-        self.TRANSITIONS = {k:v for k, v in self.TRANSITIONS.items() if k[0] in reachable_states}
+        self.TRANSITIONS = {k: v for k, v in self.TRANSITIONS.items() if k[0] in reachable_states}
 
 
     def sortTuple(self, a, b):
@@ -89,7 +91,8 @@ class DFA(object):
         for i in range(len(all_states) - 1):
             for j in range(i + 1, len(all_states)):
                 # This is already cleaned transitions table
-                matrix[self.sortTuple(all_states[i], all_states[j])] = ((all_states[i] in self.ACCEPTABLE_STATES) ^ (all_states[j] in self.ACCEPTABLE_STATES))
+                matrix[self.sortTuple(all_states[i], all_states[j])] = \
+                    ((all_states[i] in self.ACCEPTABLE_STATES) ^ (all_states[j] in self.ACCEPTABLE_STATES))
 
         for i in range(len(all_states) - 1):
             for j in range(i + 1, len(all_states)):
@@ -98,7 +101,7 @@ class DFA(object):
                     transition1 = self.getTransition(all_states[i], symbol)
                     transition2 = self.getTransition(all_states[j], symbol)
 
-                    if (transition1 != None) and (transition2 != None):
+                    if (transition1 is not None) and (transition2 is not None):
                         if matrix.get(self.sortTuple(transition1, transition2)):
                             matrix[self.sortTuple(all_states[i], all_states[j])] = True
 
@@ -185,7 +188,8 @@ def getInputTransitions():
     while True:
         try:
             function = input()
-            if function == "\n" or function == "": break
+            if function == "\n" or function == "":
+                break
             function = function.split("->")
             transitions[tuple(function[0].split(","))] = function[1]
         except:
