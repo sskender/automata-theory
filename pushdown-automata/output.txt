@@ -1,0 +1,3 @@
+q1#K|q1#NK|0
+q1#K|q1#NK|q2#NK|q2#K|q3#$|1
+q1#K|q1#JK|q2#JK|fail|0
